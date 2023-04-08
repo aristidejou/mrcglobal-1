@@ -1,5 +1,5 @@
 name: Create Baseline Repo
-
+#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
 on:
   workflow_dispatch:
     inputs:
@@ -9,7 +9,7 @@ on:
 
 env:  
     org_name: tanekemgang # Your Organization Name
-    base_repo: mrcglobal # Your Github Base Repository Names
+    base_repo: mulesoft1 # Your Github Base Repository Names
     webhook: https://jenkinsprod-webhook.mrcglobal.com/github-webhook/
 
 jobs:
@@ -34,57 +34,39 @@ jobs:
         if: env.REPO_EXISTS == 'false'
         run: |
           curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-          -d '{"name": "${{ github.event.inputs.repo_name }}", "private": true, "default_branch": "master"}' \
+          -d '{"name": "${{ github.event.inputs.repo_name }}", "private": false, "default_branch": "master"}' \
           https://api.github.com/orgs/${{ env.org_name }}/repos
 
-      - name: Initialize repository
-        run: |
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
-          -d '{"ref": "refs/heads/main", "sha": "4b825dc642cb6eb9a060e54bf8d69288fbee4904"}'
 
-      - name: WORK DONE FOR README.md File
+      - name: README.md File Modification
         run: |
-          curl -O https://raw.githubusercontent.com/${{ env.org_name }}/${{ env.base_repo }}/main/README.md
-          curl -X PUT -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               -H "Content-Type: application/json" \
-               -d '{"message": "Add README.md", "content": "'"$(base64 README.md)"'"}' \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/README.md       
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-          https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/README.md 
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-          https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
-          -d '{"ref": "refs/heads/main", "sha": "'"$(curl -H "Authorization: token ${{ secrets.BASELINE_REPO }}" https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs/heads/main | jq -r '.object.sha')"'", "force": true}'
+          curl -H "Authorization: token ${{secrets.BASELINE_REPO}}" -X GET https://raw.githubusercontent.com/{{ env.org_name}}/{{ env.base_repo }}/main/README.md?token=GHSAT0AAAAAACABEWMD5WL4PV3MZYS4IRFUZBRO4OA -o README.md 
+          content=$(cat README.md | base64)
+          curl -X PUT \
+            -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
+            -H "Content-Type: application/json" \
+            -d '{"content": "'"$content"'", "message": "Update file"}' \
+            "https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/README.md"    
 
-      - name: WORK DONE FOR .GITIGNORE File
-        run: |
-          curl -O https://raw.githubusercontent.com/${{ env.org_name }}/${{ env.base_repo }}/main/.gitignore
-          curl -X PUT -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               -H "Content-Type: application/json" \
-               -d '{"message": "Add .gitignore", "content": "'"$(base64 .gitignore)"'"}' \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/.gitignore       
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-          -d '{"message": "Add .gitignore", "content": "'"$(base64 .gitignore)"'", "branch": "main"}' \
-          https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/.gitignore 
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-          https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
-          -d '{"ref": "refs/heads/main", "sha": "'"$(curl -H "Authorization: token ${{ secrets.BASELINE_REPO }}" https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs/heads/main | jq -r '.object.sha')"'", "force": true}'
+      # - name: CODEOWNERS File Modification
+      #   run: |
+      #     curl -H "Authorization: token ${{ secrets.BASELINE_REPO }}" -X GET https://raw.githubusercontent.com/{{ env.org_name}}/{{ env.base_repo }}/main/CODEOWNERS?token=GHSAT0AAAAAACBCQVECJIJ7QDGUMMKWAH5IZBQE4UA -o CODEOWNERS 
+      #     content=$(cat CODEOWNERS | base64)
+      #     curl -X PUT \
+      #       -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
+      #       -H "Content-Type: application/json" \
+      #       -d '{"content": "'"$content"'", "message": "Update file"}' \
+      #       "https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/CODEOWNERS"  
 
-      - name: WORK DONE FOR CODEOWNERS File
-        run: |
-          curl -O https://raw.githubusercontent.com/${{ env.org_name }}/${{ env.base_repo }}/main/CODEOWNERS
-          curl -X PUT -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               -H "Content-Type: application/json" \
-               -d '{"message": "Add CODEOWNERS", "content": "'"$(base64 CODEOWNERS)"'"}' \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/CODEOWNERS       
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               -d '{"message": "Add CODEOWNERS", "content": "'"$(base64 CODEOWNERS)"'", "branch": "main"}' \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/CODEOWNERS 
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
-               -d '{"ref": "refs/heads/main", "sha": "'"$(curl -H "Authorization: token ${{ secrets.BASELINE_REPO }}" https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs/heads/main | jq -r '.object.sha')"'", "force": true}'
-  
+      # - name: .gitignore File Modification
+      #   run: |
+      #     curl -H "Authorization: token ${{ secrets.BASELINE_REPO }}" -X GET https://raw.githubusercontent.com/{{ env.org_name}}/{{ env.base_repo }}/main/.gitignore?token=GHSAT0AAAAAACBCQVECVZHZ3RRSDRHWJKN4ZBQE6ZQ -o .gitignore 
+      #     content=$(cat .gitignore | base64)
+      #     curl -X PUT \
+      #       -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
+      #       -H "Content-Type: application/json" \
+      #       -d '{"content": "'"$content"'", "message": "Update file"}' \
+      #       "https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/contents/.gitignore"            
   configure-repository:
     needs: create-repository
     runs-on: ubuntu-latest
@@ -92,33 +74,31 @@ jobs:
     steps:
       - name: Get SHA of master branch
         run: |
-          MASTER_SHA=$(curl -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-              https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs/heads/main | jq -r '.object.sha')
+          MASTER_SHA=$(curl -s -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/commits/master | jq -r '.sha')
           echo "MASTER_SHA=$MASTER_SHA" >> $GITHUB_ENV
 
       - name: Make Other Branched Too
         run: |
-          curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               -H "Accept: application/vnd.github.v3+json" \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
-               -d '{"ref": "refs/heads/master", "sha": "${{env.MASTER_SHA}}"}'
+          curl -X PATCH -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
+              -d '{"default_branch": "master"}' \
+               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}
+      
           curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
                -H "Accept: application/vnd.github.v3+json" \
                https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
                -d '{"ref": "refs/heads/development", "sha": "${{env.MASTER_SHA}}"}'
+               
            curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
                -H "Accept: application/vnd.github.v3+json" \
                https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
                -d '{"ref": "refs/heads/test", "sha": "${{env.MASTER_SHA}}"}'
+               
            curl -X POST -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
                -H "Accept: application/vnd.github.v3+json" \
                https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs \
                -d '{"ref": "refs/heads/production", "sha": "${{env.MASTER_SHA}}"}'
-            curl -X DELETE -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-               https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/git/refs/heads/main
-            curl -X PATCH -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
-              -d '{"default_branch": "master"}' \
-              https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}
+
+
       - name: 3 Teams Configuration
         run: |
           curl -X PATCH -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
@@ -166,10 +146,10 @@ jobs:
             -H "Authorization: token ${{ secrets.BASELINE_REPO }}"\
             https://api.github.com/repos/${{ env.org_name }}/${{ github.event.inputs.repo_name }}/branches/production/protection \
             -d '{"required_pull_request_reviews": {"dismiss_stale_reviews": true, "require_code_owner_reviews": true, "required_approving_review_count": 2}, "enforce_admins": true, "restrictions": {"users": [], "teams": [], "apps": []}, "required_status_checks": null, "allow_force_pushes": false, "allow_deletions": false}'   
-  send_payload:
-    needs: set-branch-protection
-    runs-on: ubuntu-latest
-    steps:
-      - name: Send Payload via CURL
-        run: |
-          curl -X POST -H "Content-Type: application/json" -d '{"message": "Hello, webhook!"}' ${{env.webhook}}
+  # send_payload:
+  #   needs: set-branch-protection
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Send Payload via CURL
+  #       run: |
+  #         curl -X POST -H "Content-Type: application/json" -d '{"message": "Hello, webhook!"}' ${{env.webhook}}
