@@ -40,7 +40,7 @@ jobs:
 
       - name: README.md File Modification
         run: |
-          curl -H "Authorization: token ${{secrets.BASELINE_REPO}}" -X GET https://raw.githubusercontent.com/{{ env.org_name }}/{{ env.base_repo }}/main/README.md?token=GHSAT0AAAAAACAFQ4EEION7GUSX6SW7PKC2ZBRPGVQ -o README.md 
+          curl -H "Authorization: token ${{secrets.BASELINE_REPO}}" -X GET https://raw.githubusercontent.com/{{ env.org_name }}/{{ env.base_repo }}/main/README.md?token=GHSAT0AAAAAACAFQ4EENDTQL2T2WH34IP5OZBRPNLA -o README.md 
           content=$(cat README.md | base64)
           curl -X PUT \
             -H "Authorization: token ${{ secrets.BASELINE_REPO }}" \
