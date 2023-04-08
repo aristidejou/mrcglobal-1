@@ -8,7 +8,7 @@ on:
         required: true
 
 env:  
-    org_name: tanekemgang # Your Organization Namejhjjhjh
+    org_name: aristidejou # Your Organization Namejhjjhjh
     base_repo: mulesoft1 # Your Github Base Repository Names
     webhook: https://jenkinsprod-webhook.mrcglobal.com/github-webhook/
 
